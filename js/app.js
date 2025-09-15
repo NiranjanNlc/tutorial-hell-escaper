@@ -809,7 +809,7 @@ class PageManager {
                     console.warn('Unknown page type:', this.appState.currentPage);
             }
         } catch (error) {
-            utils.handleError(error, 'PageManager.initializePage');
+            ErrorHandler.handleAsyncError(error, 'PageManager.initializePage');
         }
     }
 
@@ -1777,12 +1777,12 @@ class TutorialEscapeApp {
         
         // Global error handling
         window.addEventListener('error', (event) => {
-            utils.handleError(event.error, 'Global error handler');
+            ErrorHandler.handleAsyncError(event.error, 'Global error handler');
         });
 
         // Global unhandled promise rejection handling
         window.addEventListener('unhandledrejection', (event) => {
-            utils.handleError(event.reason, 'Unhandled promise rejection');
+            ErrorHandler.handleAsyncError(event.reason, 'Unhandled promise rejection');
         });
     }
 
