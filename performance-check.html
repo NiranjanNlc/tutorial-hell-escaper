@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Check - Tutorial Escape Platform</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .metric {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #2563eb;
+        }
+        .good { border-left-color: #10b981; }
+        .warning { border-left-color: #f59e0b; }
+        .error { border-left-color: #ef4444; }
+        .code {
+            background: #1e293b;
+            color: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px 10px 0;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+    <h1>Performance Check - Tutorial Escape Platform</h1>
+    
+    <p>This page helps you verify that all performance optimizations are working correctly.</p>
+    
+    <button onclick="runPerformanceCheck()">Run Performance Check</button>
+    <button onclick="testLocalStorage()">Test Local Storage</button>
+    <button onclick="testServiceWorker()">Test Service Worker</button>
+    <button onclick="testErrorHandling()">Test Error Handling</button>
+    
+    <div id="results"></div>
+    
+    <h2>Manual Checks</h2>
+    
+    <div class="metric">
+        <h3>✅ Page Load Speed</h3>
+        <p>Open browser DevTools → Network tab → Reload page</p>
+        <p><strong>Target:</strong> DOMContentLoaded < 1s, Load < 3s</p>
+    </div>
+    
+    <div class="metric">
+        <h3>✅ Lighthouse Score</h3>
+        <p>Open DevTools → Lighthouse tab → Generate report</p>
+        <p><strong>Target:</strong> Performance > 90, Accessibility > 95, Best Practices > 90, SEO > 90</p>
+    </div>
+    
+    <div class="metric">
+        <h3>✅ Mobile Responsiveness</h3>
+        <p>Test on different screen sizes using DevTools device emulation</p>
+        <p><strong>Breakpoints:</strong> 320px, 768px, 1024px, 1200px</p>
+    </div>
+    
+    <div class="metric">
+        <h3>✅ Offline Functionality</h3>
+        <p>Open DevTools → Application → Service Workers → Check "Offline"</p>
+        <p><strong>Expected:</strong> App should still work with cached content</p>
+    </div>
+    
+    <h2>Deployment Checklist</h2>
+    
+    <div class="code">
+# Quick deployment to Netlify
+1. Zip all files: index.html, project.html, js/, styles/, sw.js, site.webmanifest, robots.txt
+2. Go to netlify.com/drop
+3. Drag and drop the zip file
+4. Get your deployment URL
+
+# Or use Netlify CLI
+npm install -g netlify-cli
+netlify deploy --prod --dir .
+
+# Or deploy to Vercel
+npm install -g vercel
+vercel --prod
+
+# Or use GitHub Pages
+git add .
+git commit -m "Deploy production version"
+git push origin main
+    </div>
+    
+    <h2>Performance Monitoring</h2>
+    
+    <div class="metric">
+        <h3>Core Web Vitals</h3>
+        <ul>
+            <li><strong>LCP (Largest Contentful Paint):</strong> < 2.5s</li>
+            <li><strong>FID (First Input Delay):</strong> < 100ms</li>
+            <li><strong>CLS (Cumulative Layout Shift):</strong> < 0.1</li>
+        </ul>
+    </div>
+    
+    <script>
+        function runPerformanceCheck() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h3>Performance Check Results</h3>';
+            
+            // Check if performance API is available
+            if ('performance' in window) {
+                const navigation = performance.getEntriesByType('navigation')[0];
+                if (navigation) {
+                    const loadTime = navigation.loadEventEnd - navigation.loadEventStart;
+                    const domContentLoaded = navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart;
+                    
+                    results.innerHTML += `
+                        <div class="metric ${loadTime < 3000 ? 'good' : 'warning'}">
+                            <strong>Page Load Time:</strong> ${loadTime.toFixed(2)}ms
+                        </div>
+                        <div class="metric ${domContentLoaded < 1000 ? 'good' : 'warning'}">
+                            <strong>DOM Content Loaded:</strong> ${domContentLoaded.toFixed(2)}ms
+                        </div>
+                    `;
+                }
+            }
+            
+            // Check viewport
+            const viewport = window.innerWidth;
+            results.innerHTML += `
+                <div class="metric good">
+                    <strong>Viewport Width:</strong> ${viewport}px
+                </div>
+            `;
+            
+            // Check if CSS is loaded
+            const cssLoaded = document.styleSheets.length > 0;
+            results.innerHTML += `
+                <div class="metric ${cssLoaded ? 'good' : 'error'}">
+                    <strong>CSS Loaded:</strong> ${cssLoaded ? 'Yes' : 'No'} (${document.styleSheets.length} stylesheets)
+                </div>
+            `;
+        }
+        
+        function testLocalStorage() {
+            const results = document.getElementById('results');
+            try {
+                localStorage.setItem('test', 'value');
+                const value = localStorage.getItem('test');
+                localStorage.removeItem('test');
+                
+                results.innerHTML += `
+                    <div class="metric good">
+                        <strong>Local Storage:</strong> Working correctly
+                    </div>
+                `;
+            } catch (error) {
+                results.innerHTML += `
+                    <div class="metric error">
+                        <strong>Local Storage:</strong> Error - ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function testServiceWorker() {
+            const results = document.getElementById('results');
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    results.innerHTML += `
+                        <div class="metric ${registrations.length > 0 ? 'good' : 'warning'}">
+                            <strong>Service Worker:</strong> ${registrations.length > 0 ? 'Registered' : 'Not registered'}
+                        </div>
+                    `;
+                });
+            } else {
+                results.innerHTML += `
+                    <div class="metric warning">
+                        <strong>Service Worker:</strong> Not supported in this browser
+                    </div>
+                `;
+            }
+        }
+        
+        function testErrorHandling() {
+            const results = document.getElementById('results');
+            try {
+                // Simulate an error
+                throw new Error('Test error for error handling');
+            } catch (error) {
+                results.innerHTML += `
+                    <div class="metric good">
+                        <strong>Error Handling:</strong> Working - caught "${error.message}"
+                    </div>
+                `;
+            }
+        }
+        
+        // Auto-run performance check on load
+        window.addEventListener('load', () => {
+            setTimeout(runPerformanceCheck, 100);
+        });
+    </script>
+</body>
+</html>

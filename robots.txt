@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /.kiro/
+Disallow: /test-*
+
+Sitemap: https://tutorial-escape.netlify.app/sitemap.xml

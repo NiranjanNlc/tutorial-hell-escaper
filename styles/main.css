@@ -1704,3 +1704,697 @@ kbd {
     color: var(--color-gray-700);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
+
+/* Enhanced Notification System */
+.notification {
+    position: fixed;
+    top: var(--spacing-4);
+    right: var(--spacing-4);
+    z-index: 1000;
+    max-width: 400px;
+    min-width: 300px;
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    border-left: 4px solid var(--color-primary);
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all var(--transition-normal);
+}
+
+.notification--visible {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.notification--success {
+    border-left-color: var(--color-success);
+}
+
+.notification--error {
+    border-left-color: var(--color-error);
+}
+
+.notification--warning {
+    border-left-color: var(--color-warning);
+}
+
+.notification-content {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-3);
+    padding: var(--spacing-4);
+}
+
+.notification-icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-top: 2px;
+}
+
+.notification--success .notification-icon {
+    color: var(--color-success);
+}
+
+.notification--error .notification-icon {
+    color: var(--color-error);
+}
+
+.notification--warning .notification-icon {
+    color: var(--color-warning);
+}
+
+.notification-message {
+    flex: 1;
+    color: var(--color-gray-800);
+    font-size: var(--font-size-sm);
+    line-height: 1.4;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: var(--color-gray-400);
+    cursor: pointer;
+    font-size: var(--font-size-lg);
+    line-height: 1;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.notification-close:hover {
+    background: var(--color-gray-100);
+    color: var(--color-gray-600);
+}
+
+/* Loading Overlay Enhancements */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-normal);
+}
+
+.loading-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.loading-content {
+    text-align: center;
+    padding: var(--spacing-8);
+    background: var(--color-white);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--color-gray-200);
+}
+
+.loading-spinner-large {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--color-gray-200);
+    border-top: 4px solid var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto var(--spacing-4);
+}
+
+.loading-text {
+    color: var(--color-gray-600);
+    font-size: var(--font-size-lg);
+    font-weight: 500;
+    margin: 0;
+}
+
+/* Enhanced Error States */
+.form-error {
+    border-color: var(--color-error) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+.error-message {
+    color: var(--color-error);
+    font-size: var(--font-size-sm);
+    margin-top: var(--spacing-2);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+
+.error-message::before {
+    content: '⚠';
+    font-weight: bold;
+}
+
+/* Offline Indicator */
+.offline-indicator {
+    position: fixed;
+    bottom: var(--spacing-4);
+    left: var(--spacing-4);
+    background: var(--color-warning);
+    color: var(--color-white);
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    box-shadow: var(--shadow-md);
+    z-index: 1000;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all var(--transition-normal);
+}
+
+.offline-indicator.visible {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Performance Optimizations */
+.milestone-card,
+.question-group,
+.card {
+    will-change: transform, opacity;
+}
+
+.progress-bar__fill {
+    will-change: width;
+}
+
+.btn {
+    will-change: transform;
+}
+
+/* Skeleton Loading States */
+.skeleton {
+    background: linear-gradient(90deg, 
+        var(--color-gray-200) 25%, 
+        var(--color-gray-100) 50%, 
+        var(--color-gray-200) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-text {
+    height: 1em;
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--spacing-2);
+}
+
+.skeleton-text--title {
+    height: 1.5em;
+    width: 60%;
+}
+
+.skeleton-text--subtitle {
+    height: 1em;
+    width: 80%;
+}
+
+.skeleton-text--body {
+    height: 1em;
+    width: 100%;
+}
+
+/* Help Guide Modal */
+.help-guide-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-normal);
+}
+
+.help-guide-modal:not(.hidden) {
+    opacity: 1;
+    visibility: visible;
+}
+
+.help-guide-content {
+    background: var(--color-white);
+    border-radius: var(--radius-xl);
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    transform: scale(0.95);
+    transition: transform var(--transition-normal);
+}
+
+.help-guide-modal:not(.hidden) .help-guide-content {
+    transform: scale(1);
+}
+
+.help-guide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-6);
+    border-bottom: 1px solid var(--color-gray-200);
+}
+
+.help-guide-header h3 {
+    margin: 0;
+    color: var(--color-gray-900);
+    font-size: var(--font-size-xl);
+}
+
+.help-guide-close {
+    background: none;
+    border: none;
+    font-size: var(--font-size-2xl);
+    color: var(--color-gray-400);
+    cursor: pointer;
+    padding: var(--spacing-2);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.help-guide-close:hover {
+    background: var(--color-gray-100);
+    color: var(--color-gray-600);
+}
+
+.help-guide-body {
+    padding: var(--spacing-6);
+}
+
+.help-section {
+    margin-bottom: var(--spacing-6);
+}
+
+.help-section:last-child {
+    margin-bottom: 0;
+}
+
+.help-section h4 {
+    color: var(--color-gray-900);
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-3);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+
+.help-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.help-section li {
+    padding: var(--spacing-2) 0;
+    color: var(--color-gray-700);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-2);
+}
+
+.help-section li::before {
+    content: '•';
+    color: var(--color-primary);
+    font-weight: bold;
+    margin-top: 2px;
+}
+
+kbd {
+    background: var(--color-gray-100);
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-sm);
+    padding: 2px 6px;
+    font-family: monospace;
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-700);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Progress Indicator for Milestones */
+.progress-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-2);
+    margin: var(--spacing-6) 0;
+    padding: var(--spacing-4);
+    background: var(--color-gray-50);
+    border-radius: var(--radius-lg);
+}
+
+.progress-step {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--color-gray-200);
+    color: var(--color-gray-500);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    transition: all var(--transition-fast);
+}
+
+.progress-step--completed {
+    background: var(--color-success);
+    color: var(--color-white);
+}
+
+.progress-step--current {
+    background: var(--color-primary);
+    color: var(--color-white);
+    transform: scale(1.1);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+}
+
+.progress-connector {
+    width: 24px;
+    height: 2px;
+    background: var(--color-gray-300);
+    transition: background-color var(--transition-fast);
+}
+
+.progress-connector--completed {
+    background: var(--color-success);
+}
+
+/* Mobile Responsive Enhancements */
+@media (max-width: 768px) {
+    .notification {
+        left: var(--spacing-4);
+        right: var(--spacing-4);
+        max-width: none;
+        min-width: auto;
+    }
+    
+    .help-guide-content {
+        margin: var(--spacing-4);
+        max-height: calc(100vh - 2 * var(--spacing-4));
+    }
+    
+    .progress-indicator {
+        flex-wrap: wrap;
+        gap: var(--spacing-1);
+    }
+    
+    .progress-step {
+        width: 28px;
+        height: 28px;
+        font-size: var(--font-size-xs);
+    }
+    
+    .progress-connector {
+        width: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .loading-content {
+        margin: var(--spacing-4);
+        padding: var(--spacing-6);
+    }
+    
+    .notification-content {
+        padding: var(--spacing-3);
+    }
+    
+    .offline-indicator {
+        left: var(--spacing-2);
+        bottom: var(--spacing-2);
+        right: var(--spacing-2);
+        text-align: center;
+    }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .notification {
+        border-width: 2px;
+        border-style: solid;
+    }
+    
+    .notification--success {
+        border-color: var(--color-success);
+    }
+    
+    .notification--error {
+        border-color: var(--color-error);
+    }
+    
+    .notification--warning {
+        border-color: var(--color-warning);
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    .notification,
+    .loading-overlay,
+    .help-guide-modal,
+    .help-guide-content,
+    .skeleton {
+        transition: none;
+        animation: none;
+    }
+    
+    .loading-spinner-large {
+        animation: none;
+        border-top-color: var(--color-primary);
+    }
+    
+    .progress-step {
+        transition: none;
+    }
+}/* Criti
+cal CSS - Above the fold styles */
+/* These styles should be inlined in production for better performance */
+
+/* Critical layout styles */
+.container {
+    contain: layout style paint;
+}
+
+.header {
+    contain: layout style;
+}
+
+.card {
+    contain: layout style paint;
+}
+
+/* Performance optimizations */
+.milestone-card,
+.question-group,
+.notification {
+    contain: layout style paint;
+    will-change: auto;
+}
+
+/* GPU acceleration for animations */
+.progress-bar__fill,
+.loading-spinner,
+.loading-spinner-large {
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* Optimize repaints */
+.btn:hover,
+.option-label:hover,
+.milestone-card:hover {
+    will-change: transform;
+}
+
+/* Reset will-change after animations */
+.btn:not(:hover),
+.option-label:not(:hover),
+.milestone-card:not(:hover) {
+    will-change: auto;
+}
+
+/* Font display optimization */
+@font-face {
+    font-family: 'System';
+    src: local('system-ui'), local('-apple-system'), local('BlinkMacSystemFont');
+    font-display: swap;
+}
+
+/* Reduce layout shifts */
+.loading-spinner,
+.loading-spinner-large {
+    aspect-ratio: 1;
+}
+
+.progress-bar {
+    min-height: 16px;
+}
+
+/* Optimize for Core Web Vitals */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+.lazy {
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.lazy.loaded {
+    opacity: 1;
+}
+
+/* Print optimizations */
+@media print {
+    * {
+        background: transparent !important;
+        color: black !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+    
+    .notification,
+    .loading-overlay,
+    .help-guide-modal,
+    .btn,
+    .nav__link {
+        display: none !important;
+    }
+    
+    .container {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .card {
+        border: 1px solid #ccc;
+        page-break-inside: avoid;
+    }
+}
+
+/* Dark mode support (future enhancement) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-gray-50: #0f172a;
+        --color-gray-100: #1e293b;
+        --color-gray-200: #334155;
+        --color-gray-800: #f1f5f9;
+        --color-gray-900: #f8fafc;
+    }
+    
+    body {
+        background-color: var(--color-gray-50);
+        color: var(--color-gray-800);
+    }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Focus improvements for keyboard navigation */
+.btn:focus-visible,
+.milestone-checkbox:focus-visible,
+.help-link:focus-visible,
+.option-label:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* High contrast mode improvements */
+@media (prefers-contrast: high) {
+    .card,
+    .milestone-card,
+    .notification {
+        border-width: 2px;
+    }
+    
+    .btn {
+        border: 2px solid currentColor;
+    }
+}
+
+/* Optimize for touch devices */
+@media (hover: none) and (pointer: coarse) {
+    .btn,
+    .milestone-checkbox,
+    .option-label {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    .help-link {
+        padding: var(--spacing-3) var(--spacing-4);
+    }
+}
+
+/* Performance monitoring styles */
+.perf-monitor {
+    position: fixed;
+    top: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: var(--spacing-2);
+    font-size: var(--font-size-xs);
+    font-family: monospace;
+    z-index: 10000;
+    display: none;
+}
+
+.perf-monitor.visible {
+    display: block;
+}
+
+/* Development helpers */
+.debug-grid {
+    background-image: 
+        linear-gradient(rgba(255, 0, 0, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* End of CSS file */

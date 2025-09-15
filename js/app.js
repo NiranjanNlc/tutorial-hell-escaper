@@ -325,112 +325,423 @@ class ProgressManager {
     }
 }
 
-// Application state management
+// Enhanced Application state management with error handling
 class AppState {
     constructor() {
         this.currentPage = this.getCurrentPage();
         this.userSession = this.loadUserSession();
         this.projectProgress = this.loadProjectProgress();
+        this.isOnline = navigator.onLine;
+        this.setupNetworkListeners();
     }
 
     getCurrentPage() {
-        const path = window.location.pathname;
-        if (path.includes('project.html')) return 'project';
-        return 'index';
+        try {
+            const path = window.location.pathname;
+            if (path.includes('project.html')) return 'project';
+            return 'index';
+        } catch (error) {
+            ErrorHandler.handleAsyncError(error, 'getCurrentPage');
+            return 'index';
+        }
+    }
+
+    setupNetworkListeners() {
+        window.addEventListener('online', () => {
+            this.isOnline = true;
+            ErrorHandler.showSuccess('Connection restored');
+        });
+
+        window.addEventListener('offline', () => {
+            this.isOnline = false;
+            ErrorHandler.showWarning('You are offline. Your progress will be saved locally.');
+        });
     }
 
     loadUserSession() {
-        try {
-            const session = localStorage.getItem('tutorialEscape_userSession');
-            return session ? JSON.parse(session) : null;
-        } catch (error) {
-            console.warn('Failed to load user session:', error);
-            return null;
+        const session = utils.getLocalStorage('tutorialEscape_userSession');
+        if (session) {
+            // Validate session data
+            if (this.validateSessionData(session)) {
+                return session;
+            } else {
+                ErrorHandler.showWarning('Session data was corrupted and has been reset.');
+                this.clearUserSession();
+            }
         }
+        return null;
+    }
+
+    validateSessionData(session) {
+        return session && 
+               typeof session.skillLevel === 'string' &&
+               typeof session.currentProject === 'string' &&
+               typeof session.assessmentCompleted === 'boolean';
     }
 
     saveUserSession(sessionData) {
-        try {
-            localStorage.setItem('tutorialEscape_userSession', JSON.stringify(sessionData));
-            this.userSession = sessionData;
-        } catch (error) {
-            console.error('Failed to save user session:', error);
+        if (!this.validateSessionData(sessionData)) {
+            ErrorHandler.showError('Invalid session data. Please try again.');
+            return false;
         }
+
+        const success = utils.setLocalStorage('tutorialEscape_userSession', sessionData);
+        if (success) {
+            this.userSession = sessionData;
+            return true;
+        }
+        return false;
     }
 
     loadProjectProgress() {
+        const progress = utils.getLocalStorage('tutorialEscape_projectProgress');
+        if (progress) {
+            // Validate progress data
+            if (this.validateProgressData(progress)) {
+                return progress;
+            } else {
+                ErrorHandler.showWarning('Progress data was corrupted and has been reset.');
+                this.clearProjectProgress();
+            }
+        }
+        return null;
+    }
+
+    validateProgressData(progress) {
+        return progress &&
+               typeof progress.projectId === 'string' &&
+               Array.isArray(progress.completedMilestones) &&
+               typeof progress.totalProgress === 'number';
+    }
+
+    saveProjectProgress(progressData) {
+        if (!this.validateProgressData(progressData)) {
+            ErrorHandler.showError('Invalid progress data. Please try again.');
+            return false;
+        }
+
+        const success = utils.setLocalStorage('tutorialEscape_projectProgress', progressData);
+        if (success) {
+            this.projectProgress = progressData;
+            return true;
+        }
+        return false;
+    }
+
+    clearUserSession() {
+        const success = utils.removeLocalStorage('tutorialEscape_userSession');
+        if (success) {
+            this.userSession = null;
+        }
+        return success;
+    }
+
+    clearProjectProgress() {
+        const success = utils.removeLocalStorage('tutorialEscape_projectProgress');
+        if (success) {
+            this.projectProgress = null;
+        }
+        return success;
+    }
+
+    clearAllData() {
+        const sessionCleared = this.clearUserSession();
+        const progressCleared = this.clearProjectProgress();
+        
+        if (sessionCleared && progressCleared) {
+            ErrorHandler.showSuccess('All data cleared successfully');
+            return true;
+        } else {
+            ErrorHandler.showError('Failed to clear some data. Please try again.');
+            return false;
+        }
+    }
+
+    // Backup and restore functionality
+    exportData() {
         try {
-            const progress = localStorage.getItem('tutorialEscape_projectProgress');
-            return progress ? JSON.parse(progress) : null;
+            const data = {
+                userSession: this.userSession,
+                projectProgress: this.projectProgress,
+                exportDate: utils.getCurrentISODate(),
+                version: '1.0'
+            };
+            return JSON.stringify(data, null, 2);
         } catch (error) {
-            console.warn('Failed to load project progress:', error);
+            ErrorHandler.handleAsyncError(error, 'exportData');
             return null;
         }
     }
 
-    saveProjectProgress(progressData) {
+    importData(dataString) {
         try {
-            localStorage.setItem('tutorialEscape_projectProgress', JSON.stringify(progressData));
-            this.projectProgress = progressData;
-        } catch (error) {
-            console.error('Failed to save project progress:', error);
-        }
-    }
+            const data = JSON.parse(dataString);
+            
+            if (data.version !== '1.0') {
+                ErrorHandler.showError('Incompatible data version');
+                return false;
+            }
 
-    clearAllData() {
-        try {
-            localStorage.removeItem('tutorialEscape_userSession');
-            localStorage.removeItem('tutorialEscape_projectProgress');
-            this.userSession = null;
-            this.projectProgress = null;
+            if (data.userSession && this.validateSessionData(data.userSession)) {
+                this.saveUserSession(data.userSession);
+            }
+
+            if (data.projectProgress && this.validateProgressData(data.projectProgress)) {
+                this.saveProjectProgress(data.projectProgress);
+            }
+
+            ErrorHandler.showSuccess('Data imported successfully');
+            return true;
         } catch (error) {
-            console.error('Failed to clear data:', error);
+            ErrorHandler.handleAsyncError(error, 'importData');
+            return false;
         }
     }
 }
 
-// Utility functions
-const utils = {
-    // DOM helper functions
-    getElementById(id) {
-        const element = document.getElementById(id);
-        if (!element) {
-            console.warn(`Element with id '${id}' not found`);
+// Enhanced Error Handling and User Feedback System
+class ErrorHandler {
+    static showError(message, type = 'error', duration = 5000) {
+        this.showNotification(message, type, duration);
+    }
+
+    static showSuccess(message, duration = 3000) {
+        this.showNotification(message, 'success', duration);
+    }
+
+    static showWarning(message, duration = 4000) {
+        this.showNotification(message, 'warning', duration);
+    }
+
+    static showNotification(message, type = 'info', duration = 3000) {
+        // Remove existing notifications
+        const existing = document.querySelectorAll('.notification');
+        existing.forEach(notification => notification.remove());
+
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification notification--${type}`;
+        notification.innerHTML = `
+            <div class="notification-content">
+                <span class="notification-icon">${this.getIcon(type)}</span>
+                <span class="notification-message">${message}</span>
+                <button class="notification-close" aria-label="Close notification">×</button>
+            </div>
+        `;
+
+        // Add to page
+        document.body.appendChild(notification);
+
+        // Add event listeners
+        const closeBtn = notification.querySelector('.notification-close');
+        closeBtn.addEventListener('click', () => this.removeNotification(notification));
+
+        // Auto-remove after duration
+        setTimeout(() => this.removeNotification(notification), duration);
+
+        // Animate in
+        requestAnimationFrame(() => {
+            notification.classList.add('notification--visible');
+        });
+    }
+
+    static removeNotification(notification) {
+        if (notification && notification.parentNode) {
+            notification.classList.remove('notification--visible');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
         }
-        return element;
+    }
+
+    static getIcon(type) {
+        const icons = {
+            success: '✓',
+            error: '⚠',
+            warning: '⚠',
+            info: 'ℹ'
+        };
+        return icons[type] || icons.info;
+    }
+
+    static handleAsyncError(error, context = '') {
+        console.error(`Async error in ${context}:`, error);
+        
+        let userMessage = 'Something went wrong. Please try again.';
+        
+        if (error.name === 'NetworkError' || error.message.includes('fetch')) {
+            userMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.name === 'QuotaExceededError') {
+            userMessage = 'Storage is full. Please clear some browser data and try again.';
+        } else if (error.message.includes('localStorage')) {
+            userMessage = 'Unable to save your progress. Please check your browser settings.';
+        }
+        
+        this.showError(userMessage);
+        return false;
+    }
+}
+
+// Enhanced Utility functions with error handling
+const utils = {
+    // DOM helper functions with error handling
+    getElementById(id) {
+        try {
+            const element = document.getElementById(id);
+            if (!element) {
+                console.warn(`Element with id '${id}' not found`);
+            }
+            return element;
+        } catch (error) {
+            ErrorHandler.handleAsyncError(error, `getElementById(${id})`);
+            return null;
+        }
     },
 
     querySelector(selector) {
-        return document.querySelector(selector);
-    },
-
-    querySelectorAll(selector) {
-        return document.querySelectorAll(selector);
-    },
-
-    // Class manipulation helpers
-    addClass(element, className) {
-        if (element) element.classList.add(className);
-    },
-
-    removeClass(element, className) {
-        if (element) element.classList.remove(className);
-    },
-
-    toggleClass(element, className) {
-        if (element) element.classList.toggle(className);
-    },
-
-    // Event handling helpers
-    addEventListener(element, event, handler) {
-        if (element) {
-            element.addEventListener(event, handler);
+        try {
+            return document.querySelector(selector);
+        } catch (error) {
+            ErrorHandler.handleAsyncError(error, `querySelector(${selector})`);
+            return null;
         }
     },
 
-    // Form validation helpers
+    querySelectorAll(selector) {
+        try {
+            return document.querySelectorAll(selector);
+        } catch (error) {
+            ErrorHandler.handleAsyncError(error, `querySelectorAll(${selector})`);
+            return [];
+        }
+    },
+
+    // Safe class manipulation helpers
+    addClass(element, className) {
+        try {
+            if (element && element.classList) {
+                element.classList.add(className);
+                return true;
+            }
+        } catch (error) {
+            ErrorHandler.handleAsyncError(error, 'addClass');
+        }
+        return false;
+    },
+
+    removeClass(element, className) {
+        try {
+            if (element && element.classList) {
+                element.classList.remove(className);
+                return true;
+            }
+        } catch (error) {
+            ErrorHandler.handleAsyncError(error, 'removeClass');
+        }
+        return false;
+    },
+
+    toggleClass(element, className) {
+        try {
+            if (element && element.classList) {
+                element.classList.toggle(className);
+                return true;
+            }
+        } catch (error) {
+            ErrorHandler.handleAsyncError(error, 'toggleClass');
+        }
+        return false;
+    },
+
+    // Safe event handling helpers
+    addEventListener(element, event, handler) {
+        try {
+            if (element && typeof handler === 'function') {
+                element.addEventListener(event, handler);
+                return true;
+            }
+        } catch (error) {
+            ErrorHandler.handleAsyncError(error, `addEventListener(${event})`);
+        }
+        return false;
+    },
+
+    // Enhanced form validation helpers
     validateRequired(value) {
-        return value && value.trim().length > 0;
+        return value && typeof value === 'string' && value.trim().length > 0;
+    },
+
+    validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    },
+
+    sanitizeInput(input) {
+        if (typeof input !== 'string') return '';
+        return input.replace(/[<>\"']/g, '');
+    },
+
+    // Safe localStorage operations
+    setLocalStorage(key, value) {
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+            return true;
+        } catch (error) {
+            if (error.name === 'QuotaExceededError') {
+                ErrorHandler.showError('Storage is full. Please clear some browser data.');
+            } else {
+                ErrorHandler.handleAsyncError(error, 'setLocalStorage');
+            }
+            return false;
+        }
+    },
+
+    getLocalStorage(key) {
+        try {
+            const item = localStorage.getItem(key);
+            return item ? JSON.parse(item) : null;
+        } catch (error) {
+            ErrorHandler.handleAsyncError(error, 'getLocalStorage');
+            return null;
+        }
+    },
+
+    removeLocalStorage(key) {
+        try {
+            localStorage.removeItem(key);
+            return true;
+        } catch (error) {
+            ErrorHandler.handleAsyncError(error, 'removeLocalStorage');
+            return false;
+        }
+    },
+
+    // Performance helpers
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    },
+
+    throttle(func, limit) {
+        let inThrottle;
+        return function() {
+            const args = arguments;
+            const context = this;
+            if (!inThrottle) {
+                func.apply(context, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        };
     },
 
     // Date helpers
@@ -438,10 +749,31 @@ const utils = {
         return new Date().toISOString();
     },
 
-    // Error handling
-    handleError(error, context = '') {
-        console.error(`Error in ${context}:`, error);
-        // In a real app, this might send to error tracking service
+    formatDate(dateString) {
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString();
+        } catch (error) {
+            return 'Invalid date';
+        }
+    },
+
+    // Network helpers
+    async fetchWithTimeout(url, options = {}, timeout = 10000) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        
+        try {
+            const response = await fetch(url, {
+                ...options,
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            return response;
+        } catch (error) {
+            clearTimeout(timeoutId);
+            throw error;
+        }
     }
 };
 
@@ -1488,3 +1820,262 @@ if (typeof module !== 'undefined' && module.exports) {
 
 // Make app available globally for debugging
 window.tutorialEscapeApp = app;
+// Perf
+ormance Optimization Manager
+class PerformanceManager {
+    constructor() {
+        this.observers = new Map();
+        this.setupIntersectionObserver();
+        this.setupPerformanceMonitoring();
+    }
+
+    setupIntersectionObserver() {
+        if ('IntersectionObserver' in window) {
+            this.intersectionObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-in');
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '50px'
+            });
+        }
+    }
+
+    observeElement(element) {
+        if (this.intersectionObserver && element) {
+            this.intersectionObserver.observe(element);
+        }
+    }
+
+    setupPerformanceMonitoring() {
+        // Monitor page load performance
+        if ('performance' in window) {
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    const perfData = performance.getEntriesByType('navigation')[0];
+                    if (perfData) {
+                        console.log('Page Load Performance:', {
+                            loadTime: perfData.loadEventEnd - perfData.loadEventStart,
+                            domContentLoaded: perfData.domContentLoadedEventEnd - perfData.domContentLoadedEventStart,
+                            totalTime: perfData.loadEventEnd - perfData.fetchStart
+                        });
+                    }
+                }, 0);
+            });
+        }
+    }
+
+    // Lazy load images
+    lazyLoadImages() {
+        const images = document.querySelectorAll('img[data-src]');
+        
+        if ('IntersectionObserver' in window) {
+            const imageObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        img.classList.remove('lazy');
+                        imageObserver.unobserve(img);
+                    }
+                });
+            });
+
+            images.forEach(img => imageObserver.observe(img));
+        } else {
+            // Fallback for browsers without IntersectionObserver
+            images.forEach(img => {
+                img.src = img.dataset.src;
+                img.classList.remove('lazy');
+            });
+        }
+    }
+
+    // Preload critical resources
+    preloadResources() {
+        const criticalResources = [
+            { href: 'styles/main.css', as: 'style' },
+            { href: 'js/app.js', as: 'script' }
+        ];
+
+        criticalResources.forEach(resource => {
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.href = resource.href;
+            link.as = resource.as;
+            document.head.appendChild(link);
+        });
+    }
+
+    // Optimize animations for better performance
+    optimizeAnimations() {
+        // Reduce animations on low-end devices
+        if ('deviceMemory' in navigator && navigator.deviceMemory < 4) {
+            document.documentElement.classList.add('reduce-animations');
+        }
+
+        // Pause animations when page is not visible
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                document.documentElement.classList.add('paused-animations');
+            } else {
+                document.documentElement.classList.remove('paused-animations');
+            }
+        });
+    }
+}
+
+// Enhanced Page Manager with performance optimizations
+class EnhancedPageManager extends PageManager {
+    constructor(appState) {
+        super(appState);
+        this.performanceManager = new PerformanceManager();
+        this.setupServiceWorker();
+    }
+
+    initializePage() {
+        try {
+            // Show loading overlay immediately
+            this.showLoadingOverlay('Loading...');
+            
+            // Add smooth page transition
+            this.addPageTransition();
+            
+            // Initialize performance optimizations
+            this.performanceManager.optimizeAnimations();
+            this.performanceManager.lazyLoadImages();
+            
+            switch (this.appState.currentPage) {
+                case 'index':
+                    this.initializeIndexPage();
+                    break;
+                case 'project':
+                    this.initializeProjectPage();
+                    break;
+                default:
+                    console.warn('Unknown page type:', this.appState.currentPage);
+            }
+            
+            // Hide loading overlay after initialization
+            setTimeout(() => this.hideLoadingOverlay(), 500);
+            
+        } catch (error) {
+            ErrorHandler.handleAsyncError(error, 'EnhancedPageManager.initializePage');
+            this.hideLoadingOverlay();
+        }
+    }
+
+    setupServiceWorker() {
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    }
+
+    // Enhanced form validation with debouncing
+    setupFormValidation() {
+        const form = utils.getElementById('assessment-form');
+        if (!form) return;
+
+        const debouncedValidation = utils.debounce(() => {
+            this.validateForm();
+        }, 300);
+
+        // Add real-time validation with debouncing
+        form.addEventListener('input', debouncedValidation);
+        form.addEventListener('change', debouncedValidation);
+    }
+
+    validateForm() {
+        const form = utils.getElementById('assessment-form');
+        if (!form) return false;
+
+        let isValid = true;
+        const questions = form.querySelectorAll('.question-group');
+        
+        questions.forEach((questionGroup, index) => {
+            const radios = questionGroup.querySelectorAll('input[type="radio"]');
+            const hasSelection = Array.from(radios).some(radio => radio.checked);
+            
+            if (!hasSelection) {
+                isValid = false;
+                questionGroup.classList.add('question-error');
+            } else {
+                questionGroup.classList.remove('question-error');
+            }
+        });
+
+        // Update submit button state
+        const submitBtn = utils.getElementById('submit-assessment');
+        if (submitBtn) {
+            submitBtn.disabled = !isValid;
+            if (isValid) {
+                submitBtn.classList.add('btn--ready');
+            } else {
+                submitBtn.classList.remove('btn--ready');
+            }
+        }
+
+        return isValid;
+    }
+
+    // Enhanced progress tracking with animations
+    updateFormProgress() {
+        const form = utils.getElementById('assessment-form');
+        if (!form) return;
+
+        const totalQuestions = ASSESSMENT_QUESTIONS.length;
+        const answeredQuestions = form.querySelectorAll('input[type="radio"]:checked').length;
+        const progress = (answeredQuestions / totalQuestions) * 100;
+
+        // Update progress indicator if it exists
+        const progressIndicator = document.querySelector('.form-progress');
+        if (progressIndicator) {
+            const progressBar = progressIndicator.querySelector('.progress-bar__fill');
+            if (progressBar) {
+                progressBar.style.width = `${progress}%`;
+            }
+        }
+
+        // Validate form
+        this.validateForm();
+    }
+}
+
+// Initialize the enhanced application
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        const appState = new AppState();
+        const pageManager = new EnhancedPageManager(appState);
+        
+        // Make appState globally available for debugging
+        window.tutorialEscapeApp = {
+            appState,
+            pageManager,
+            ErrorHandler,
+            utils
+        };
+        
+    } catch (error) {
+        ErrorHandler.handleAsyncError(error, 'Application initialization');
+    }
+});
+
+// Global error handler
+window.addEventListener('error', (event) => {
+    ErrorHandler.handleAsyncError(event.error, 'Global error handler');
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+    ErrorHandler.handleAsyncError(event.reason, 'Unhandled promise rejection');
+});
