@@ -7,10 +7,18 @@
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-    <main class="container">
+    <main class="container page-transition">
         <header class="header">
             <nav class="nav">
-                <a href="index.html" class="nav__link">← Back to Assessment</a>
+                <a href="index.html" class="nav__link">
+                    <span>←</span>
+                    <span>Back to Assessment</span>
+                </a>
+                <div class="nav__breadcrumb">
+                    <span>Home</span>
+                    <span class="nav__breadcrumb-separator">›</span>
+                    <span>Project Dashboard</span>
+                </div>
             </nav>
             <h1 class="header__title" id="project-title">Your Project</h1>
             <p class="header__subtitle" id="project-description">Loading project details...</p>
@@ -53,6 +61,11 @@
                 <div class="milestones-header">
                     <h2 class="section-title">Project Milestones</h2>
                     <p class="milestones-subtitle">Complete each milestone to build your project step by step</p>
+                    
+                    <!-- Progress Indicator -->
+                    <div class="progress-indicator" id="milestone-progress-indicator">
+                        <!-- Progress steps will be populated here -->
+                    </div>
                 </div>
                 
                 <div class="milestones-grid" id="milestones-list">
@@ -64,12 +77,61 @@
                 <button class="btn btn--secondary" id="reset-progress-btn">
                     <span>Reset Progress</span>
                 </button>
+                <button class="btn btn--outline" id="help-guide-btn">
+                    <span>❓ Help & Shortcuts</span>
+                </button>
                 <a href="index.html" class="btn btn--outline">
                     <span>← Back to Assessment</span>
                 </a>
             </div>
+            
+            <!-- Help Guide Modal -->
+            <div class="help-guide-modal hidden" id="help-guide-modal">
+                <div class="help-guide-content">
+                    <div class="help-guide-header">
+                        <h3>Navigation Help & Keyboard Shortcuts</h3>
+                        <button class="help-guide-close" id="help-guide-close">×</button>
+                    </div>
+                    <div class="help-guide-body">
+                        <div class="help-section">
+                            <h4>🎯 Getting Started</h4>
+                            <ul>
+                                <li>Click checkboxes to mark milestones as complete</li>
+                                <li>Use help links to access relevant documentation</li>
+                                <li>Expand help sections for additional resources</li>
+                            </ul>
+                        </div>
+                        <div class="help-section">
+                            <h4>⌨️ Keyboard Shortcuts</h4>
+                            <ul>
+                                <li><kbd>Enter</kbd> or <kbd>Space</kbd> - Toggle milestone completion</li>
+                                <li><kbd>H</kbd> - Open help resource</li>
+                                <li><kbd>?</kbd> - Toggle help section</li>
+                                <li><kbd>Tab</kbd> - Navigate between elements</li>
+                            </ul>
+                        </div>
+                        <div class="help-section">
+                            <h4>💡 Tips</h4>
+                            <ul>
+                                <li>Focus on one milestone at a time</li>
+                                <li>Use the hints to guide your implementation</li>
+                                <li>Don't hesitate to check the documentation links</li>
+                                <li>Your progress is automatically saved</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
     </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner-large"></div>
+            <p class="loading-text">Loading your project...</p>
+        </div>
+    </div>
 
     <script src="js/app.js"></script>
 </body>

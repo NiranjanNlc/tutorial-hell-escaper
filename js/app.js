@@ -463,6 +463,9 @@ class PageManager {
 
     initializePage() {
         try {
+            // Add smooth page transition
+            this.addPageTransition();
+            
             switch (this.appState.currentPage) {
                 case 'index':
                     this.initializeIndexPage();
@@ -475,6 +478,64 @@ class PageManager {
             }
         } catch (error) {
             utils.handleError(error, 'PageManager.initializePage');
+        }
+    }
+
+    addPageTransition() {
+        const container = document.querySelector('.page-transition');
+        if (container) {
+            // Add loading class initially
+            container.classList.add('loaded');
+            
+            // Add smooth navigation for links
+            this.setupSmoothNavigation();
+        }
+    }
+
+    setupSmoothNavigation() {
+        // Add smooth transitions for navigation links
+        const navLinks = document.querySelectorAll('a[href$=".html"]');
+        navLinks.forEach(link => {
+            utils.addEventListener(link, 'click', (e) => {
+                e.preventDefault();
+                this.navigateWithTransition(link.href);
+            });
+        });
+    }
+
+    navigateWithTransition(url) {
+        const container = document.querySelector('.page-transition');
+        if (container) {
+            // Show loading overlay
+            this.showLoadingOverlay();
+            
+            // Fade out current page
+            container.classList.remove('loaded');
+            
+            // Navigate after transition
+            setTimeout(() => {
+                window.location.href = url;
+            }, 250);
+        } else {
+            // Fallback to immediate navigation
+            window.location.href = url;
+        }
+    }
+
+    showLoadingOverlay(message = 'Loading...') {
+        const overlay = utils.getElementById('loading-overlay');
+        const text = overlay?.querySelector('.loading-text');
+        
+        if (overlay) {
+            if (text) text.textContent = message;
+            overlay.classList.add('active');
+        }
+    }
+
+    hideLoadingOverlay() {
+        const overlay = utils.getElementById('loading-overlay');
+        if (overlay) {
+            overlay.classList.remove('active');
         }
     }
 
@@ -851,6 +912,9 @@ class PageManager {
     loadProjectDashboard() {
         console.log('Loading project dashboard...');
         
+        // Show loading state
+        this.showLoadingOverlay('Loading your project dashboard...');
+        
         const userSession = this.appState.userSession;
         const projectProgress = this.appState.projectProgress;
         
@@ -883,8 +947,90 @@ class PageManager {
         // Update progress indicator
         this.updateProgressIndicator(projectProgress);
         
+        // Load milestone progress indicator
+        this.loadMilestoneProgressIndicator(project, projectProgress);
+        
         // Set up reset progress button
         this.setupResetProgressButton();
+        
+        // Set up help guide
+        this.setupHelpGuide();
+        
+        // Hide loading overlay after everything is loaded
+        setTimeout(() => {
+            this.hideLoadingOverlay();
+        }, 500);
+    }
+
+    setupHelpGuide() {
+        const helpBtn = utils.getElementById('help-guide-btn');
+        const helpModal = utils.getElementById('help-guide-modal');
+        const closeBtn = utils.getElementById('help-guide-close');
+        
+        if (helpBtn && helpModal) {
+            utils.addEventListener(helpBtn, 'click', () => {
+                helpModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            });
+        }
+        
+        if (closeBtn && helpModal) {
+            utils.addEventListener(closeBtn, 'click', () => {
+                helpModal.classList.add('hidden');
+                document.body.style.overflow = '';
+            });
+        }
+        
+        // Close on backdrop click
+        if (helpModal) {
+            utils.addEventListener(helpModal, 'click', (e) => {
+                if (e.target === helpModal) {
+                    helpModal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+        
+        // Close on Escape key
+        utils.addEventListener(document, 'keydown', (e) => {
+            if (e.key === 'Escape' && helpModal && !helpModal.classList.contains('hidden')) {
+                helpModal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        });
+    }
+
+    loadMilestoneProgressIndicator(project, progress) {
+        const indicatorContainer = utils.getElementById('milestone-progress-indicator');
+        if (!indicatorContainer) return;
+
+        indicatorContainer.innerHTML = '';
+
+        project.milestones.forEach((milestone, index) => {
+            const isCompleted = progress?.completedMilestones.includes(milestone.id) || false;
+            const isCurrent = progress?.currentMilestone === milestone.id;
+            
+            // Create step element
+            const stepDiv = document.createElement('div');
+            stepDiv.className = `progress-step ${
+                isCompleted ? 'progress-step--completed' : 
+                isCurrent ? 'progress-step--current' : 
+                'progress-step--pending'
+            }`;
+            stepDiv.textContent = isCompleted ? '✓' : (index + 1);
+            stepDiv.title = milestone.title;
+            
+            indicatorContainer.appendChild(stepDiv);
+            
+            // Add connector (except for last item)
+            if (index < project.milestones.length - 1) {
+                const connectorDiv = document.createElement('div');
+                connectorDiv.className = `progress-connector ${
+                    isCompleted ? 'progress-connector--completed' : ''
+                }`;
+                indicatorContainer.appendChild(connectorDiv);
+            }
+        });
     }
 
     loadProjectMilestones(project, progress) {
@@ -939,14 +1085,43 @@ class PageManager {
                         <span>⏱️ ~${milestone.estimatedTime} hours</span>
                     </div>
                     <div class="milestone-help">
-                        <a href="${milestone.helpResource.url}" 
-                           target="_blank" 
-                           rel="noopener noreferrer"
-                           class="help-link"
-                           aria-label="Open help resource: ${milestone.helpResource.title}">
-                            <span class="help-icon">📚</span>
-                            <span>${milestone.helpResource.title}</span>
-                        </a>
+                        <div class="help-tooltip">
+                            <a href="${milestone.helpResource.url}" 
+                               target="_blank" 
+                               rel="noopener noreferrer"
+                               class="help-link"
+                               aria-label="Open help resource: ${milestone.helpResource.title}">
+                                <span class="help-icon">📚</span>
+                                <span>${milestone.helpResource.title}</span>
+                            </a>
+                            <div class="help-tooltip-content">
+                                ${milestone.helpResource.description}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="help-expandable" data-milestone-id="${milestone.id}">
+                    <div class="help-expandable-header">
+                        <h4 class="help-expandable-title">Need more help with this milestone?</h4>
+                        <span class="help-expandable-icon">▼</span>
+                    </div>
+                    <div class="help-expandable-content">
+                        <div class="help-expandable-body">
+                            <p class="help-expandable-description">
+                                ${milestone.helpResource.description}
+                            </p>
+                            <div class="help-expandable-links">
+                                <a href="${milestone.helpResource.url}" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   class="help-expandable-link">
+                                    <span>📖</span>
+                                    <span>Read Documentation</span>
+                                </a>
+                                ${this.getAdditionalHelpLinks(milestone)}
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -966,8 +1141,140 @@ class PageManager {
                 });
             }
 
+            // Set up expandable help section
+            this.setupExpandableHelp(milestoneDiv, milestone);
+            
+            // Add keyboard navigation
+            this.setupKeyboardNavigation(milestoneDiv, milestone);
+
             milestonesContainer.appendChild(milestoneDiv);
         });
+    }
+
+    getAdditionalHelpLinks(milestone) {
+        // Generate additional contextual help links based on milestone content
+        const additionalLinks = [];
+        
+        // Add specific help links based on milestone keywords
+        if (milestone.title.toLowerCase().includes('html') || milestone.description.toLowerCase().includes('html')) {
+            additionalLinks.push(`
+                <a href="https://developer.mozilla.org/en-US/docs/Web/HTML" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   class="help-expandable-link">
+                    <span>🌐</span>
+                    <span>HTML Basics</span>
+                </a>
+            `);
+        }
+        
+        if (milestone.title.toLowerCase().includes('css') || milestone.description.toLowerCase().includes('styling')) {
+            additionalLinks.push(`
+                <a href="https://developer.mozilla.org/en-US/docs/Web/CSS" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   class="help-expandable-link">
+                    <span>🎨</span>
+                    <span>CSS Guide</span>
+                </a>
+            `);
+        }
+        
+        if (milestone.title.toLowerCase().includes('javascript') || milestone.description.toLowerCase().includes('function')) {
+            additionalLinks.push(`
+                <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   class="help-expandable-link">
+                    <span>⚡</span>
+                    <span>JavaScript Guide</span>
+                </a>
+            `);
+        }
+        
+        if (milestone.title.toLowerCase().includes('api') || milestone.description.toLowerCase().includes('fetch')) {
+            additionalLinks.push(`
+                <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   class="help-expandable-link">
+                    <span>🔗</span>
+                    <span>API Tutorial</span>
+                </a>
+            `);
+        }
+        
+        return additionalLinks.join('');
+    }
+
+    setupExpandableHelp(milestoneDiv, milestone) {
+        const expandableHelp = milestoneDiv.querySelector('.help-expandable');
+        const header = expandableHelp?.querySelector('.help-expandable-header');
+        
+        if (header && expandableHelp) {
+            utils.addEventListener(header, 'click', () => {
+                const isExpanded = expandableHelp.classList.contains('expanded');
+                expandableHelp.classList.toggle('expanded');
+                
+                // Update aria attributes
+                header.setAttribute('aria-expanded', !isExpanded);
+                
+                // Add visual cue when expanded
+                if (!isExpanded) {
+                    milestoneDiv.classList.add('visual-cue', 'active');
+                    setTimeout(() => {
+                        milestoneDiv.classList.remove('active');
+                    }, 2000);
+                } else {
+                    milestoneDiv.classList.remove('visual-cue');
+                }
+            });
+        }
+    }
+
+    setupKeyboardNavigation(milestoneDiv, milestone) {
+        const checkbox = milestoneDiv.querySelector('.milestone-checkbox');
+        const helpLink = milestoneDiv.querySelector('.help-link');
+        const expandableHeader = milestoneDiv.querySelector('.help-expandable-header');
+        
+        // Add keyboard support for milestone card
+        milestoneDiv.setAttribute('tabindex', '0');
+        milestoneDiv.setAttribute('role', 'article');
+        milestoneDiv.setAttribute('aria-label', `Milestone: ${milestone.title}`);
+        
+        // Keyboard navigation for milestone card
+        utils.addEventListener(milestoneDiv, 'keydown', (e) => {
+            switch (e.key) {
+                case 'Enter':
+                case ' ':
+                    e.preventDefault();
+                    if (checkbox) checkbox.click();
+                    break;
+                case 'h':
+                case 'H':
+                    e.preventDefault();
+                    if (helpLink) helpLink.click();
+                    break;
+                case '?':
+                    e.preventDefault();
+                    if (expandableHeader) expandableHeader.click();
+                    break;
+            }
+        });
+        
+        // Add keyboard support for expandable help
+        if (expandableHeader) {
+            expandableHeader.setAttribute('tabindex', '0');
+            expandableHeader.setAttribute('role', 'button');
+            expandableHeader.setAttribute('aria-expanded', 'false');
+            
+            utils.addEventListener(expandableHeader, 'keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    expandableHeader.click();
+                }
+            });
+        }
     }
 
     showCompletionCelebration(container) {
@@ -1070,6 +1377,7 @@ class PageManager {
         const project = ProgressManager.getProjectById(userSession.currentProject);
         if (project) {
             this.loadProjectMilestones(project, updatedProgress);
+            this.loadMilestoneProgressIndicator(project, updatedProgress);
         }
     }
 
