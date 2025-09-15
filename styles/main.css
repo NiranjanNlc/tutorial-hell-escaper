@@ -2398,3 +2398,10 @@ img {
 }
 
 /* End of CSS file */
+/* Fix: Ensure question titles are readable in dark-mode when cards remain white */
+@media (prefers-color-scheme: dark) {
+    .card .card__title,
+    .card .question-title {
+        color: #0f172a; /* dark text on white card */
+    }
+}

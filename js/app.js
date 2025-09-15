@@ -1820,8 +1820,7 @@ if (typeof module !== 'undefined' && module.exports) {
 
 // Make app available globally for debugging
 window.tutorialEscapeApp = app;
-// Perf
-ormance Optimization Manager
+// Performance Optimization Manager
 class PerformanceManager {
     constructor() {
         this.observers = new Map();
