@@ -337,8 +337,15 @@ class AppState {
 
     getCurrentPage() {
         try {
-            const path = window.location.pathname;
-            if (path.includes('project.html')) return 'project';
+            const path = window.location.pathname.toLowerCase();
+            // Support pretty URLs (e.g., /project) and file URLs (project.html)
+            if (path.includes('project')) return 'project';
+            // Fallback: detect by DOM markers if script runs after DOM is ready
+            if (typeof document !== 'undefined') {
+                if (document.getElementById('milestones-list') || document.getElementById('project-title')) {
+                    return 'project';
+                }
+            }
             return 'index';
         } catch (error) {
             ErrorHandler.handleAsyncError(error, 'getCurrentPage');

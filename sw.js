@@ -1,7 +1,7 @@
 // Service Worker for Tutorial Escape Platform
 // Provides offline functionality and caching for better performance
 
-const CACHE_NAME = 'tutorial-escape-v1.0.0';
+const CACHE_NAME = 'tutorial-escape-v1.0.1';
 const STATIC_CACHE_URLS = [
     '/',
     '/index.html',
