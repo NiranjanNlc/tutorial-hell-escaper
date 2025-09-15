@@ -882,56 +882,175 @@ class PageManager {
         
         // Update progress indicator
         this.updateProgressIndicator(projectProgress);
+        
+        // Set up reset progress button
+        this.setupResetProgressButton();
     }
 
     loadProjectMilestones(project, progress) {
-        const milestonesContainer = utils.getElementById('milestones-container');
+        const milestonesContainer = utils.getElementById('milestones-list');
         if (!milestonesContainer) {
             console.warn('Milestones container not found');
             return;
         }
 
+        // Clear existing milestones
         milestonesContainer.innerHTML = '';
 
+        // Check if all milestones are completed
+        const allCompleted = progress?.completedMilestones.length === project.milestones.length;
+        
+        // Show completion celebration if all done
+        if (allCompleted) {
+            this.showCompletionCelebration(milestonesContainer);
+        }
+
+        // Create milestone elements with enhanced UI
         project.milestones.forEach((milestone, index) => {
             const isCompleted = progress?.completedMilestones.includes(milestone.id) || false;
             const isCurrent = progress?.currentMilestone === milestone.id;
-            
+
             const milestoneDiv = document.createElement('div');
-            milestoneDiv.className = `milestone ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}`;
+            milestoneDiv.className = `milestone-card ${isCompleted ? 'milestone-card--completed' : ''} ${isCurrent ? 'milestone-card--current' : ''}`;
+            
             milestoneDiv.innerHTML = `
                 <div class="milestone-header">
-                    <div class="milestone-checkbox">
-                        <input type="checkbox" id="milestone-${milestone.id}" 
+                    <div class="milestone-checkbox-container">
+                        <input type="checkbox" 
+                               class="milestone-checkbox" 
+                               id="milestone-${milestone.id}" 
                                ${isCompleted ? 'checked' : ''} 
-                               data-milestone-id="${milestone.id}">
-                        <label for="milestone-${milestone.id}"></label>
+                               data-milestone-id="${milestone.id}"
+                               aria-label="Mark milestone as complete">
                     </div>
-                    <h3 class="milestone-title">${milestone.title}</h3>
-                    <span class="milestone-time">${milestone.estimatedTime}h</span>
+                    <div class="milestone-content">
+                        <h3 class="milestone-title">${milestone.title}</h3>
+                        <p class="milestone-description">${milestone.description}</p>
+                    </div>
                 </div>
-                <div class="milestone-content">
-                    <p class="milestone-description">${milestone.description}</p>
-                    <p class="milestone-hint"><strong>Hint:</strong> ${milestone.hint}</p>
+                
+                <div class="milestone-hint">
+                    <span class="milestone-hint-label">💡 Hint</span>
+                    <p class="milestone-hint-text">${milestone.hint}</p>
+                </div>
+                
+                <div class="milestone-meta">
+                    <div class="milestone-time">
+                        <span>⏱️ ~${milestone.estimatedTime} hours</span>
+                    </div>
                     <div class="milestone-help">
-                        <a href="${milestone.helpResource.url}" target="_blank" class="help-link">
-                            📚 ${milestone.helpResource.title}
+                        <a href="${milestone.helpResource.url}" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           class="help-link"
+                           aria-label="Open help resource: ${milestone.helpResource.title}">
+                            <span class="help-icon">📚</span>
+                            <span>${milestone.helpResource.title}</span>
                         </a>
-                        <span class="help-description">${milestone.helpResource.description}</span>
                     </div>
                 </div>
             `;
 
-            // Add event listener for checkbox
-            const checkbox = milestoneDiv.querySelector('input[type="checkbox"]');
+            // Add event listener for checkbox with smooth animation
+            const checkbox = milestoneDiv.querySelector('.milestone-checkbox');
             if (checkbox) {
                 utils.addEventListener(checkbox, 'change', (e) => {
-                    this.handleMilestoneToggle(milestone.id, e.target.checked);
+                    // Add loading state
+                    milestoneDiv.classList.add('milestone-card--loading');
+                    
+                    // Simulate processing time for better UX
+                    setTimeout(() => {
+                        this.handleMilestoneToggle(milestone.id, e.target.checked);
+                        milestoneDiv.classList.remove('milestone-card--loading');
+                    }, 300);
                 });
             }
 
             milestonesContainer.appendChild(milestoneDiv);
         });
+    }
+
+    showCompletionCelebration(container) {
+        const celebrationDiv = document.createElement('div');
+        celebrationDiv.className = 'completion-celebration';
+        celebrationDiv.innerHTML = `
+            <div class="celebration-icon">🎉</div>
+            <h3 class="celebration-title">Congratulations!</h3>
+            <p class="celebration-message">
+                You've completed all milestones! You've successfully escaped tutorial hell and built something real. 
+                Time to start your next project or add your own features to this one.
+            </p>
+            <div class="celebration-actions">
+                <button class="btn btn--primary btn--large" onclick="window.tutorialEscapeApp.resetApp()">
+                    <span>Start New Project</span>
+                    <span class="btn-arrow">→</span>
+                </button>
+            </div>
+        `;
+        
+        container.appendChild(celebrationDiv);
+    }
+
+    setupResetProgressButton() {
+        const resetBtn = utils.getElementById('reset-progress-btn');
+        if (resetBtn) {
+            utils.addEventListener(resetBtn, 'click', () => {
+                if (confirm('Are you sure you want to reset your progress? This action cannot be undone.')) {
+                    this.resetProjectProgress();
+                }
+            });
+        }
+    }
+
+    resetProjectProgress() {
+        const userSession = this.appState.userSession;
+        if (!userSession || !userSession.currentProject) return;
+
+        // Create fresh progress
+        const freshProgress = ProgressManager.createNewProgress(userSession.currentProject);
+        this.appState.saveProjectProgress(freshProgress);
+
+        // Reload the dashboard
+        this.loadProjectDashboard();
+        
+        // Show confirmation
+        this.showResetConfirmation();
+    }
+
+    showResetConfirmation() {
+        // Create temporary notification
+        const notification = document.createElement('div');
+        notification.className = 'reset-notification';
+        notification.innerHTML = `
+            <div class="notification-content">
+                <span class="notification-icon">🔄</span>
+                <span class="notification-text">Progress reset successfully!</span>
+            </div>
+        `;
+        
+        // Add styles
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--color-success);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            animation: slideInRight 0.3s ease-out;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease-in';
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
     }
 
     handleMilestoneToggle(milestoneId, completed) {
@@ -955,17 +1074,57 @@ class PageManager {
     }
 
     updateProgressIndicator(progress) {
-        const progressBar = utils.getElementById('progress-bar');
+        const progressFill = utils.getElementById('progress-fill');
         const progressText = utils.getElementById('progress-text');
+        const completedCount = utils.getElementById('completed-count');
+        const totalCount = utils.getElementById('total-count');
+        const encouragement = utils.getElementById('progress-encouragement');
         
-        if (progressBar) {
-            progressBar.style.width = `${progress?.totalProgress || 0}%`;
+        const completed = progress?.completedMilestones.length || 0;
+        const total = progress ? ProgressManager.getProjectById(progress.projectId)?.milestones.length || 0 : 0;
+        const percentage = progress?.totalProgress || 0;
+        
+        // Update progress bar with animation
+        if (progressFill) {
+            progressFill.style.width = `${percentage}%`;
         }
         
+        // Update progress text
         if (progressText) {
-            const completed = progress?.completedMilestones.length || 0;
-            const total = progress ? ProgressManager.getProjectById(progress.projectId)?.milestones.length || 0 : 0;
-            progressText.textContent = `${completed} of ${total} milestones completed (${progress?.totalProgress || 0}%)`;
+            progressText.textContent = `${percentage}% Complete`;
+        }
+        
+        // Update stats
+        if (completedCount) {
+            completedCount.textContent = completed;
+        }
+        
+        if (totalCount) {
+            totalCount.textContent = total;
+        }
+        
+        // Update encouragement message based on progress
+        if (encouragement) {
+            const encouragementText = encouragement.querySelector('.encouragement-text');
+            if (encouragementText) {
+                let message = '';
+                
+                if (percentage === 0) {
+                    message = "Ready to start building? Let's tackle your first milestone!";
+                } else if (percentage < 25) {
+                    message = "Great start! You're building momentum. Keep going!";
+                } else if (percentage < 50) {
+                    message = "You're making solid progress! The foundation is taking shape.";
+                } else if (percentage < 75) {
+                    message = "Excellent work! You're more than halfway there!";
+                } else if (percentage < 100) {
+                    message = "Almost there! You're so close to completing your project!";
+                } else {
+                    message = "🎉 Project complete! You've successfully escaped tutorial hell!";
+                }
+                
+                encouragementText.textContent = message;
+            }
         }
     }
 }

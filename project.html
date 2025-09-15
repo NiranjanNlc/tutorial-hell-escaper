@@ -18,20 +18,55 @@
 
         <section class="project-dashboard">
             <div class="progress-overview">
-                <div class="card">
-                    <h2 class="card__title">Progress Overview</h2>
-                    <div class="progress-bar">
-                        <div class="progress-bar__fill" id="progress-fill" style="width: 0%"></div>
+                <div class="card card--progress">
+                    <div class="progress-header">
+                        <h2 class="card__title">Progress Overview</h2>
+                        <div class="progress-stats">
+                            <span class="stat-item">
+                                <span class="stat-number" id="completed-count">0</span>
+                                <span class="stat-label">completed</span>
+                            </span>
+                            <span class="stat-divider">of</span>
+                            <span class="stat-item">
+                                <span class="stat-number" id="total-count">0</span>
+                                <span class="stat-label">milestones</span>
+                            </span>
+                        </div>
                     </div>
-                    <p class="progress-text" id="progress-text">0% Complete</p>
+                    
+                    <div class="progress-visual">
+                        <div class="progress-bar">
+                            <div class="progress-bar__fill" id="progress-fill" style="width: 0%">
+                                <div class="progress-bar__shine"></div>
+                            </div>
+                        </div>
+                        <p class="progress-text" id="progress-text">0% Complete</p>
+                    </div>
+
+                    <div class="progress-encouragement" id="progress-encouragement">
+                        <p class="encouragement-text">Ready to start building? Let's tackle your first milestone!</p>
+                    </div>
                 </div>
             </div>
 
             <div class="milestones-container">
-                <h2 class="section-title">Project Milestones</h2>
-                <div class="milestones-list" id="milestones-list">
+                <div class="milestones-header">
+                    <h2 class="section-title">Project Milestones</h2>
+                    <p class="milestones-subtitle">Complete each milestone to build your project step by step</p>
+                </div>
+                
+                <div class="milestones-grid" id="milestones-list">
                     <!-- Milestones will be populated here -->
                 </div>
+            </div>
+
+            <div class="project-actions">
+                <button class="btn btn--secondary" id="reset-progress-btn">
+                    <span>Reset Progress</span>
+                </button>
+                <a href="index.html" class="btn btn--outline">
+                    <span>← Back to Assessment</span>
+                </a>
             </div>
         </section>
     </main>
