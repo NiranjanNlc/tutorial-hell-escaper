@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Task Completion Committer",
+  "description": "Monitors tasks.md for completed tasks and automatically creates commits with the task title as the commit message",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "tasks.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A task has been completed in tasks.md. Please review the changes to identify which task was marked as complete, then create a git commit with the task title as the commit message. Make sure to stage all relevant project files before committing."
+  }
+}

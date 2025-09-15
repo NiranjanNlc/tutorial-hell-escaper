@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Assessment - Tutorial Escape Platform</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <style>
+        .test-info {
+            background: #e0f2fe;
+            border: 1px solid #0288d1;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            color: #01579b;
+        }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <div class="test-info">
+            <h3>🧪 Assessment Test Page</h3>
+            <p>This page tests the assessment functionality. The assessment should load automatically with smooth animations.</p>
+        </div>
+
+        <header class="header">
+            <h1 class="header__title">Tutorial Escape Platform</h1>
+            <p class="header__subtitle">Break free from tutorial hell and start building</p>
+        </header>
+
+        <section class="assessment" id="assessment-section">
+            <div class="card">
+                <h2 class="card__title">Quick Skill Assessment</h2>
+                <p class="card__description">
+                    Take a quick assessment to get a personalized project recommendation that matches your current skill level
+                </p>
+                
+                <form class="assessment-form" id="assessment-form">
+                    <div id="questions-container" class="questions-container">
+                        <!-- Questions will be loaded here -->
+                    </div>
+                    
+                    <div class="form-validation" id="form-validation" style="display: none;">
+                        <p class="validation-message"></p>
+                    </div>
+                    
+                    <button type="submit" class="btn btn--primary" id="submit-assessment">
+                        <span class="btn-text">Get My Project Recommendation</span>
+                        <span class="btn-loading" style="display: none;">
+                            <span class="loading-spinner"></span>
+                            Processing...
+                        </span>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <section class="results hidden" id="results-section">
+            <div class="card card--result">
+                <div class="result-header">
+                    <div class="result-icon">🎯</div>
+                    <h2 class="card__title">Your Perfect Project Match</h2>
+                </div>
+                
+                <div class="project-recommendation" id="project-recommendation">
+                    <!-- Project recommendation will be populated here -->
+                </div>
+                
+                <div class="result-actions">
+                    <a href="project.html" class="btn btn--primary btn--large" id="start-project-btn">
+                        <span>Start Building Now</span>
+                        <span class="btn-arrow">→</span>
+                    </a>
+                    <button class="btn btn--secondary" id="retake-assessment">
+                        Take Assessment Again
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Test script to verify functionality
+        console.log('🧪 Test page loaded');
+        console.log('Assessment questions:', window.tutorialEscapeApp?.getAssessmentQuestions());
+        console.log('Project templates:', window.tutorialEscapeApp?.getProjectTemplates());
+        
+        // Test assessment simulation
+        setTimeout(() => {
+            const testResponses = [1, 1, 2, 1]; // Intermediate responses
+            const result = window.tutorialEscapeApp?.simulateAssessment(testResponses);
+            console.log('Test assessment result:', result);
+        }, 2000);
+    </script>
+</body>
+</html>
+</content>
+</invoke>
